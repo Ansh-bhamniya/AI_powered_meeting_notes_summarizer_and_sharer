@@ -1,0 +1,8 @@
+# backend/requirements.txt
+langchain
+langchain-community
+langchain-openai
+langchain-google-genai
+google-generativeai
+chromadb
+sentence-transformers

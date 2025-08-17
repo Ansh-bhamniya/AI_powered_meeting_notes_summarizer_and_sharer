@@ -1,0 +1,30 @@
+.typing-suggestion {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    font-size: 18px;
+    display: flex;            /* added: to make align-items work */
+    align-items: center;
+    font-weight: 600 !important;
+    color: white !important;  /* color white, not black */
+  }
+  
+  .variable-text {
+    display: inline-flex;     /* added: align-items works only with flex/inline-flex */
+    align-items: center;
+    color: white !important;
+  }
+  
+  .cursor {
+    display: inline-block;
+    color: purple;
+    height: 1em;
+    width: 2px;
+    animation: blink 0.8s infinite;
+    vertical-align: bottom;  /* better vertical alignment */
+  }
+  
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; } /* fixed overlap at 50% */
+  }
+  
