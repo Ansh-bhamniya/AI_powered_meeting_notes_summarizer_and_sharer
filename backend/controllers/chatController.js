@@ -149,7 +149,12 @@ exports.getChatById = async (req, res) => {
       res.status(500).json({ error: error.message });
     }
   };
+// // we are going to save user summary and action point 
+// exports.saveSummary = async (req ,res) => {
 
+//   const userId = req.user.uid;
+//   const {chatId , summary ,action}
+// }
   
 
 

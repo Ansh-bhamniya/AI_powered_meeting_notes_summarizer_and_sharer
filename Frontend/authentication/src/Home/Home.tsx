@@ -4,9 +4,10 @@ import './Home.css';
 import { useNavigate } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
 import SettingsModal from './SettingModel';
-import HomePointerAnimation from './HomePointerAnimation';
-
+import EditableText from './EditableText';
+import EmailForm from './EmailForm';
 // Types
+
 interface Message {
   id: string;
   text: string;
@@ -29,6 +30,10 @@ interface ChatResponse {
   aiReply?: string;
 }
 
+interface Props {
+  content?: string; // Content to be emailed
+}
+
 const Home: React.FC = () => {
   const [prompt, setPrompt] = useState('');
   const [showMenu, setShowMenu] = useState(false);
@@ -46,10 +51,14 @@ const Home: React.FC = () => {
   const userId = user?.uid || '';
   const userEmail = user?.email || 'No Email';
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null); // React state
   const [uploadedFilePath, setUploadedFilePath] = useState<string | null>(null);
   const [fileUploaded, setFileUploaded] = useState(false);
-
+  const [summary, setSummary] = useState("");
+  const [showSummary, setShowSummary] = useState(false); // boolean
+  const [ap , setAp] = useState("");
+  const [showActionPlan, setShowActionPlan] = useState(false);
+  const [activeButton, setActiveButton] = useState<"summary" | "ap" | null>(null);
 
   // For auto-scrolling
   const chatEndRef = useRef<HTMLDivElement | null>(null);
@@ -224,6 +233,7 @@ const handlePromptSubmit = async (e: React.FormEvent) => {
   }
 };
   
+
   const handleDeleteChat =async(chatId:string)=>{
     if (!user) return;
     const token = await user.getIdToken();
@@ -260,7 +270,8 @@ const handlePromptSubmit = async (e: React.FormEvent) => {
     console.log('Save Api Key:', apiKey);
     setShowSettingsModal(false);
   };
-    
+
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -284,18 +295,47 @@ const handlePromptSubmit = async (e: React.FormEvent) => {
       setFileUploaded(false); // reset if no file is selected
     }
   };
+
+  const handleShowSummary = () => {
+    setActiveButton("summary");
+    console.log(summary);
+    if (!summary) { // Check if summary exists instead of showSummary
+      alert("No summary available yet. Please upload a file first.");
+      return;
+    }
+    setShowActionPlan(false);
+    setShowSummary(true);
+  }
+  
+  const handleShowActionPlan = () => {
+    setActiveButton("ap");
+    console.log(ap);
+    if(ap) {
+      setShowSummary(false);
+      setShowActionPlan(true);
+
+    } else {
+      alert("No action plan available yet. Please upload a file first.");
+    }
+  }
+  
   
 
-  const handleFileUpload = async () => {
-    if (!selectedFile || !user) return;
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sF = e.target.files ?  e.target.files[0] : null;
+
+    if(!sF || !user) return;
   
     const token = await user.getIdToken();
     const formData = new FormData();
-    formData.append('file', selectedFile);
-    formData.append('chatId', currentChatId || ''); // send current chatId if exists
-  
+    formData.append('file', sF);
+    formData.append('chatId', currentChatId || ''); // send current chatId if exists\
+    formData.append('userId', userId)
+
+    console.log("????")
+    let res = null
     try {
-      const res = await fetch('http://localhost:5001/api/chats/upload', {
+      res = await fetch('http://localhost:5001/api/chats/upload', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -304,12 +344,19 @@ const handlePromptSubmit = async (e: React.FormEvent) => {
       });
   
       const data = await res.json();
-      if (res.ok && data.fileUrl) {
-        setUploadedFilePath(data.fileUrl);
+      if (res.ok && data.file.fileUrl) {
+        setUploadedFilePath(data.file.fileUrl);
         alert('File uploaded successfully!');
+        console.log("final_summary" , data);
+        setFileUploaded(true); 
+        setSummary(data.res.final_summary);
+        // setShowSummary(true);        
+        setAp(data.res.action_point)        // mark as uploaded;
       } else {
         alert('Failed to upload file');
         console.error(data);
+        setFileUploaded(false); // reset if no file is selected
+        
       }
     } catch (error) {
       console.error('Upload error:', error);
@@ -317,8 +364,10 @@ const handlePromptSubmit = async (e: React.FormEvent) => {
     }
   };
   
+  
   ////
   return (
+
     <div className="home-container">
       {/* Sidebar */}
       {sidebarOpen && (
@@ -389,29 +438,62 @@ const handlePromptSubmit = async (e: React.FormEvent) => {
   
       {/* Main Chat Area */}
       <div className="main-content">
-        <div className="chat-rectangle">
-          {messages.length === 0 ? (
-            <div className="welcome-text">👋 Welcome! Start a new chat</div>
-          ) : (
-            <div className="chat-messages">
-              {messages.map((msg) => (
-                <div key={msg.id} className={`message ${msg.sender}`}>
-                  <div className="message-avatar">
-                    {msg.sender === "user" ? (
-                      <FiUser />
-                    ) : (
-                      <div className="ai-avatar">AI</div>
-                    )}
-                  </div>
-                  <div className="message-content">
-                    <div className="message-text">{msg.text}</div>
-                  </div>
+      <div className="chat-rectangle">
+      {showSummary ? (
+        <>
+          <EditableText 
+            content={summary}
+            onSave={(editedContent) => {
+              setSummary(editedContent);
+              console.log('Summary saved:', editedContent);
+            }}
+            isEditable={true}
+          />
+          <EmailForm 
+          content={summary}
+          contentType='summary'
+          onSend={(email) => console.log("Summary sent to:", email)} />
+
+            {/* console.log(email); */}
+        </>
+      ) : showActionPlan ? (
+        <>
+          <EditableText 
+            content={ap}
+            onSave={(editedContent) => {
+              setAp(editedContent);
+              console.log('Action plan saved:', editedContent);
+            }}
+            isEditable={true}
+          />
+          <EmailForm 
+          content={ap}
+          contentType='actionPlan'
+          onSend={(email) => console.log("Action Plan sent to:", email)} />
+        </>
+        ) : messages.length === 0 ? (
+          <div className="welcome-text">👋 Welcome! Start a new chat</div>
+        ) : (
+          <div className="chat-messages">
+            {messages.map((msg) => (
+              <div key={msg.id} className={`message ${msg.sender}`}>
+                <div className="message-avatar">
+                  {msg.sender === "user" ? (
+                    <FiUser />
+                  ) : (
+                    <div className="ai-avatar">AI</div>
+                  )}
                 </div>
-              ))}
-              <div ref={chatEndRef} />
-            </div>
-          )}
-        </div>
+                <div className="message-content">
+                  <div className="message-text">{msg.text}</div>
+                </div>
+              </div>
+            ))}
+            <div ref={chatEndRef} />
+          </div>
+        )}
+      </div>
+
 
         {/* Suggestion Box */}
         <div className='bottom-section'>
@@ -420,6 +502,7 @@ const handlePromptSubmit = async (e: React.FormEvent) => {
             <label
               htmlFor="fileInput"
               className={`suggestion-box upload-btn ${fileUploaded ? 'uploaded' : ''}`}
+              
             >
               {fileUploaded ? "File Uploaded ✅" : "File Upload"}
             </label>
@@ -427,12 +510,24 @@ const handlePromptSubmit = async (e: React.FormEvent) => {
               type="file"
               id="fileInput"
               style={{ display: 'none' }}
-              onChange={handleFileChange} // your function to handle upload
+              disabled={fileUploaded} // disables input itself 
+              onChange={handleFileUpload} // your function to handle upload
             />
 
             {/* Other Suggestions */}
-            <div className="suggestion-box">Summarize in bullet points</div>
-            <div className="suggestion-box">Make Action plan</div>
+
+            <div
+            className={`suggestion-box ${!fileUploaded ? 'disabled' : ''}`}
+            onClick={handleShowSummary}
+            >
+              Summarize in bullet points
+            </div>
+            <div
+              className={`suggestion-box ${!fileUploaded ? 'disabled' : ''}`}
+              onClick={fileUploaded ? handleShowActionPlan : undefined}
+            >
+              Make Action plan
+            </div>
     </div>
         
 

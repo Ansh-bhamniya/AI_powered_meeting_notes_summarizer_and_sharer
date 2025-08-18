@@ -1,5 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from summary import init
+from pydantic import BaseModel
+
 
 app = FastAPI()
 
@@ -20,19 +22,35 @@ import asyncio
 import time
 import logging
 from typing import List
+# from pymongo import MongoClient
+# from dotenv import load_dotenv
+
+# load_dotenv()
+# MONGO_URI = os.getenv("MONGO_URI")
+# # Connect to MongoDB
+# client = MongoClient(MONGO_URI)
+# db = client['chatgpt']          
+# chat_collection = db['chats'] 
+
+# # Fetch latest chat
+# chat_doc = chat_collection.find_one({}, sort=[("_id", -1)])
+# if chat_doc:
+#     chat_id = str(chat_doc["_id"])  
+#     print("Fetched chatId:", chat_id)
+# else:
+#     print("No chats found!")
+
+api_key = 'AIzaSyCAvXrHWGYA9RIQ9ix4oqcBOvVXDABZLJM'
 
 genai.configure(api_key=api_key)
-
-db_directory = "/content/chroma_db"
+# db_directory = f"./content/chroma_db/{chat_id}"
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7, google_api_key=api_key)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
-
-
-# embeddings = HuggingFaceEmbeddings(
-#     model_name="sentence-transformers/all-MiniLM-L6-v2"
-# )
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
+)
 
 # file_path = "./transcript.txt"
 
@@ -62,9 +80,25 @@ async def upload_txt(file: UploadFile = File(...)):
     
     return {"filename": file.filename, "path": file_path}
 
-@app.get("/getSummary")
-async def get_summary():
-    return
+# Define the request model
+class FileRequest(BaseModel):
+    FilePath: str
+
+
+@app.post("/process-file")
+async def process_file(FilePath: str , chatId):
+    file_path = FilePath
+
+    # Example: check if file exists
+    try:
+           a,b,c = await init(file_path, embeddings , chatId)
+
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    # Do something with the file content
+    return {"final_summary": a, "action_point": b}
+
 
 @app.get("/hello/{name}")
 async def say_hello(name: str):

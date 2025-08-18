@@ -5,6 +5,7 @@ const authController = async (req, res) => {
 
     const { userId } = req.body;
     console.log( " this is user id " , userId);
+
   
     if (!userId) {
         console.log('No userId provided');

@@ -3,6 +3,10 @@ const ApiKey = require('../models/ApiKey');
 const fs = require('fs');
 const Chat = require('../models/Chat');
 const path = require('path'); 
+const axios = require("axios");
+
+llmBackendUrl = 'http://localhost:8000/'
+
 
 exports.saveApiKey = async (req, res) => {
   const { userId, apiKey } = req.body;
@@ -81,11 +85,26 @@ exports.getApiKey = async (req, res) => {
       };
   
       await chat.save();
-  
+      console.log(">>>> ",chat.uploadedFile.fileUrl)
+      let response = null
+      try {
+        response = await axios.post(llmBackendUrl+'process-file'+`?FilePath=${chat.uploadedFile.fileUrl}&chatId=${chat.id}`, {
+
+        });
+        console.log(chat.id)
+    
+        // Send API response to client
+        // res.status(200).json(response.data);
+      } catch (error) {
+        console.error("API call failed:", error.message);
+        res.status(500).json({ error: "Failed to fetch data from API" });
+        return;
+      }
       res.status(200).json({
         message: 'File uploaded successfully',
         chatId: chat._id,
-        file: chat.uploadedFile
+        file: chat.uploadedFile,
+        res: response.data
       });
   
     } catch (err) {

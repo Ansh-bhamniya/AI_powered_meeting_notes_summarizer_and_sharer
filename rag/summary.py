@@ -16,20 +16,15 @@ import time
 import logging
 from typing import List
 
-genai.configure(api_key=api_key)
+db_directory = None
 
-db_directory = "/content/chroma_db"
+api_key = 'AIzaSyCAvXrHWGYA9RIQ9ix4oqcBOvVXDABZLJM'
+
+print("Chroma DB directory:", db_directory)
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7, google_api_key=api_key)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
-
-
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
-)
-
-file_path = "/content/transcript.txt"
 
 db = None
 async def chunk_text(file_path):
@@ -42,14 +37,18 @@ async def chunk_text(file_path):
   return docs
 
 
-async def create_vector_store_async(docs: list[Document], embeddings: embeddings, db_directory: str) -> Chroma:
+async def create_vector_store_async(docs: list[Document], embeddings, db_directory: str) -> Chroma:
 
     if await asyncio.to_thread(os.path.exists, db_directory):
         print(f"Old database found at {db_directory}. Deleting...")
+
         await asyncio.to_thread(shutil.rmtree, db_directory)
         print("Old database deleted.")
 
     global db
+    await asyncio.to_thread(os.makedirs, db_directory)
+
+
 
 
     # Load the text, chunk it, and create the new vector store
@@ -188,9 +187,9 @@ Meeting Summary Text:
   return action_summary
 
 
-async def init(file_path, embeddings):
-
-
+async def init(file_path, embeddings , chat_id ):
+    
+    db_directory = f"./content/chroma_db/{chat_id}"
     chunking_task = asyncio.create_task(chunk_text(file_path))
 
     results_from_first_set_of_tasks = await asyncio.gather(chunking_task)
@@ -219,9 +218,6 @@ async def init(file_path, embeddings):
 # --- To run the main async function ---
 if __name__ == '__main__':
     final_summary, action_points, vector_db = asyncio.run(main())
-
-def getSum():
-    return final_summary
 
 
 

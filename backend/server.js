@@ -8,6 +8,7 @@ const ApiKey = require('./models/ApiKey');
 const authController = require('./controllers/auth');
 const chatController = require('./controllers/chatController');
 const upload = require('./middleware/upload');
+const {  sendMail } = require('./mail/mailServices');
 const app = express();
 
 // CORS configuration
@@ -46,6 +47,24 @@ app.post('/api/chats/del', verifyFirebaseToken, chatController.DeletePreviousMes
 
 app.post('/api/chats/upload', upload.single('file'), featureController.uploadFile);
 app.get('/api/chats/file/:chatId', featureController.getFile);
+
+// Test email API
+app.post("/send-email", async (req, res) => {
+  const { to, subject, text } = req.body;
+
+  if (!to || !subject || !text) {
+    return res.status(400).json({ success: false, error: "Missing fields" });
+  }
+
+  const result = await sendMail(to, subject, text);
+
+  if (result.success) {
+    res.json({ success: true, message: "Email sent successfully", result });
+  } else {
+    res.status(500).json({ success: false, error: result.error });
+  }
+});
+
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
