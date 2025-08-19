@@ -4,7 +4,10 @@ An intelligent web application that processes text transcripts (meeting notes, c
 
 <img width="2301" height="1210" alt="image" src="https://github.com/user-attachments/assets/69a070b1-141e-42f0-bf80-ab8c1a764567" />
 Upload .txt file 
-<img width="2301" height="1210" alt="image" src="https://github.com/user-attachments/assets/2e9f0e77-a7fd-4104-8e3e-2e6e9c5c432a" />
+<img width="2301" height="1210" alt="image" src="https://github.com/user-attachments/assets/1206d325-33ff-4917-8802-7ce5c206f36f" />
+recived Email
+![Uploading image.png…]()
+
 
 ## 🚀 Features
 
