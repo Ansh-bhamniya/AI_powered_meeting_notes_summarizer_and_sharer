@@ -40,7 +40,7 @@ from typing import List
 # else:
 #     print("No chats found!")
 
-api_key = 'AIzaSyCAvXrHWGYA9RIQ9ix4oqcBOvVXDABZLJM'
+api_key = ''
 
 genai.configure(api_key=api_key)
 # db_directory = f"./content/chroma_db/{chat_id}"
