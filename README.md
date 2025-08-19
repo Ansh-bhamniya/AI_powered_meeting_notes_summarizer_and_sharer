@@ -3,7 +3,7 @@
 An intelligent web application that processes text transcripts (meeting notes, call transcripts) and generates structured summaries with action items using Google's Gemini AI model. Features user authentication, RAG (Retrieval-Augmented Generation) architecture, and email sharing capabilities.
 
 <img width="2301" height="1210" alt="image" src="https://github.com/user-attachments/assets/69a070b1-141e-42f0-bf80-ab8c1a764567" />
-upload .txt file 
+Upload .txt file 
 <img width="2301" height="1210" alt="image" src="https://github.com/user-attachments/assets/2e9f0e77-a7fd-4104-8e3e-2e6e9c5c432a" />
 
 ## 🚀 Features
